@@ -8,12 +8,15 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Scanner;
+import java.util.Iterator;
 
 public class ProductMain {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-
+		ProductProcess pp = new ProductProcess();
+		pp.process();
 	}
 
 }
@@ -59,9 +62,140 @@ class Product{
 		return num;
 	}
 	
-	public void setNum() {
-		
+	public void setNum(int num) {
+		this.num=num;
 	}
+}
+
+class ProductProcess
+{
+	Scanner sc = new Scanner(System.in);
+	boolean bFlag = true;
+	ServiceImpl service = new ServiceImpl();
+	
+	void process()
+	{
+		System.out.println("============================");
+		System.out.println("=======Á¦Ç°°ü¸® ÇÁ·Î±×·¥=========");
+		System.out.println("============================");
+		while(bFlag){
+			System.out.println("¸Ş´º¸¦ ¼±ÅÃÇØÁÖ¼¼¿ä.");
+			System.out.println("1. Á¾·á 2. Á¦Ç°µî·Ï 3. Á¦Ç°¼öÁ¤ 4. Á¦Ç°»èÁ¦ 5. Á¦Ç°°Ë»ö 6. ÀüÃ¼ Á¦Ç° ¸ñ·Ï");
+			int menu = sc.nextInt();
+			
+			switch(menu)
+			{
+			case 1: //Á¾·á
+				bFlag = false;
+				service.close();
+				System.out.println("ÇÁ·Î±×·¥Á¾·á");
+				
+			case 2: //Ãß°¡
+				addProduct();
+				break;
+				
+			case 3://°»½Å
+				modifyProduct();
+				break;
+				
+			case 4://»èÁ¦
+				deleteProduct();
+				break;
+			
+			case 5://°Ë»ö
+				searchProduct();
+				break;
+			
+			case 6:
+				searchAll();
+				break;
+			}
+		}
+	}
+	
+	void searchAll(){
+		System.out.println("--------------------------");
+		System.out.println("ÀüÃ¼ Á¦Ç° ¸ñ·Ï");
+		ArrayList<Product> al = service.selectAll();
+		
+		Iterator<Product> iter = al.iterator();
+		while(iter.hasNext())
+		{
+			Product p = iter.next();
+			System.out.println(p);
+		}
+		System.out.println("--------------------------");
+	}
+	
+	void searchProduct() {
+		searchAll();
+		System.out.print("°Ë»öÇÏ°íÀÚ ÇÏ´Â Á¦Ç°ÀÇ ¹øÈ£´Â");
+		int num = sc.nextInt();
+		Product p = service.select(num);
+		System.out.println("°Ë»ö°á°ú´Â ´ÙÀ½°ú °°´Ù.");
+		if(p==null)
+		{
+			System.out.println("Á¸ÀçÇÏÁö ¾Ê´Â Á¦Ç°¹øÈ£ÀÔ´Ï´Ù.");
+		}
+		else {
+			System.out.println(p);
+		}
+	}
+	
+	void deleteProduct() {
+		searchAll();
+		System.out.println("»èÁ¦ÇÏ°íÀÚ ÇÏ´Â Á¦Ç° ¹øÈ£´Â");
+		int num = sc.nextInt();
+		if(service.select(num)==null) {
+			System.out.println("Á¸ÀçÇÏÁö ¾Ê´Â Á¦Ç°¹øÈ£ÀÔ´Ï´Ù.");
+			return;
+		}
+		if(service.delete(num))
+		{
+			System.out.println("»èÁ¦¼º°ø");
+		}
+		else {
+			System.out.println("»èÁ¦½ÇÆĞ");
+		}
+	}
+	
+	void modifyProduct() {
+		searchAll();
+		System.out.print("¼öÁ¤ÇÏ°í ½ÍÀº Á¦Ç° ¹øÈ£´Â");
+		int num = sc.nextInt();
+		if(service.select(num)==null) {
+			System.out.println("Á¸ÀçÇÏÁö ¾Ê´Â Á¦Ç° ¹øÈ£ÀÔ´Ï´Ù.");
+		}
+		
+		System.out.print("Á¦Ç°¸í");
+		String name = sc.next();
+		System.out.println("°¡°İÀº");
+		int price = sc.nextInt();
+		
+		if(service.update(new Product(num, name, price))) {
+			System.out.println("¼öÁ¤ ¼º°ø");
+		}
+		else {
+			System.out.println("¼öÁ¤ ½ÇÆĞ");
+		}
+	}
+	
+	void addProduct() {
+		System.out.println("Ãß°¡ÇÒ Á¦Ç°ÀÇ ÀÌ¸§Àº");
+		String name = sc.next();
+		System.out.println("Ãß°¡ÇÒ Á¦Ç°ÀÇ °¡°İÀº");
+		int price = sc.nextInt();
+		
+		Product p = new Product(name, price);
+		
+		if(service.insert(p)) {
+			System.out.println("Á¦Ç°À» Ãß°¡ÇÏ¿´½À´Ï´Ù.");
+		}
+		else {
+			System.out.println("Á¦Ç° Ãß°¡ ½ÇÆĞ");
+		}
+	}
+	
 }
 
 class DBConnect{
@@ -75,7 +209,7 @@ class DBConnect{
 		try {
 		Class.forName(jdbc_driver);
 		}catch (ClassNotFoundException e) {
-			System.out.println("jdbc ë“œë¼ì´ë²„ ë¡œë“œ ì‹¤íŒ¨");
+			System.out.println("jdbc µå¶óÀÌ¹ö ·Îµå ½ÇÆĞ");
 			e.printStackTrace();
 		}
 		
@@ -89,9 +223,9 @@ class DBConnect{
 		
 		try {
 			conn=DriverManager.getConnection(jdbc_url, properties);
-			System.out.println("connection ì—°ê²° ì„±ê³µ");
+			System.out.println("connection ¿¬°á ¼º°ø");
 		}catch(SQLException e) {
-			System.out.println("connection ì‹¤íŒ¨");
+			System.out.println("connection ½ÇÆĞ");
 			e.printStackTrace();
 		}
 
@@ -105,7 +239,7 @@ class DBConnect{
 			
 		}catch(SQLException e) {
 			e.printStackTrace();
-			System.out.println("statement ì„±ê³µ");
+			System.out.println("statement ¼º°ø");
 		}
 		
 	}
